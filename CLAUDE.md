@@ -30,11 +30,16 @@ The user follows **Extreme Programming (XP)** principles with strong emphasis on
 - Work backwards from assertions to define necessary actions and arrangements
 - Red → Green → Refactor cycle with minimal implementations
 - Production code is NEVER written without a failing test first
+- When working on a new feature / application where no implementation or structure exists yet, I'm happy to have a high-level test drive out the most basic end-to-end implementation (a really thin vertical slice only) and, once that's working, refactor to extract separate responsibilities and retrofit unit tests. From this point on, I'm able to use TDD on the individual units.
+- **Never change production code without having a failing test that drives the change**
+- To make a test pass, implement the minimum code required. Do not add additional capabilities or alternative execution paths. Implementing the minimum code forces us to write another test to proceed further. This ensures we grow high test coverage alongside our production code.
 
 ### Test Quality
 - Test code maintained with same quality as production code
 - Real browser testing preferred over mocked/unit tests for smoke tests
 - Iterative test development - start with simplest assertions
+- If a test is failing, think hard about whether editing the test is the right thing to do. If the code you wish to add to the test is actually a responsibility of the system under test, then consider how that behaviour can be implemented in the SUT instead.
+- **NEVER change assertions just to make tests pass** - assertions represent the desired outcome. When tests fail, first fix the production code to achieve the desired behavior. Only consider changing test setup/mocking if we haven't properly established the conditions for the scenario we're actually testing.
 
 ### Development Approach
 - Iterative and incremental development
