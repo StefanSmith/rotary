@@ -1,4 +1,4 @@
-import {Page} from '@playwright/test';
+import type {Page} from '@playwright/test';
 
 export async function ensureGoogleApiLibraryAlwaysGeneratesGoogleSheet(spreadsheetUrl: string, page: Page) {
     await page.route('**/apis.google.com/js/api.js', async route => {

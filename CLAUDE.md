@@ -19,6 +19,7 @@ A frontend-only web application for generating annual rotas for doctors in a ger
 - `npx playwright test` - Run acceptance tests in headless browser
 - `npx playwright test --ui` - Run tests with UI mode
 - `npx playwright show-report` - Open last test report
+- To run tests after a change, use npm test. This includes typechecking so you can fix up typing issues.
 
 ## Engineering Practices
 
@@ -44,6 +45,7 @@ The user follows **Extreme Programming (XP)** principles with strong emphasis on
 ### Development Approach
 - Iterative and incremental development
 - Make many small commits as waypoints for reverting if needed
+- **CRITICAL: Always run tests before committing**
 - Always ensure tests pass before committing (keep HEAD green)
 - Commit frequently to enable continuous delivery readiness
 - Use feature flags for work-in-progress features that need multiple commits
@@ -69,6 +71,9 @@ The user follows **Extreme Programming (XP)** principles with strong emphasis on
 - Vite for build/dev server
 - Playwright for acceptance testing
 
+### Architectural Principles
+- I leverage Hexagonal Architecture ("Ports & Adapters") wherever possible to keep domain code and external IO concerns (aka "infrastructure code") separate.
+
 **Data Flow:**
 - Generate rota data in memory
 - Display in familiar Google Sheets table format
@@ -89,3 +94,6 @@ The user follows **Extreme Programming (XP)** principles with strong emphasis on
 3. Refactor if needed
 4. Add next assertion iteratively
 5. Document learnings in this file
+
+## Code Philosophy
+- Don't write overly defensive code where the calling code could never put the called code in the state being defended against.
