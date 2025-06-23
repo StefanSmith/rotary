@@ -45,6 +45,10 @@ The user follows **Extreme Programming (XP)** principles with strong emphasis on
 - Capture and document engineering practices as they emerge
 - Critique changes to learn and refine approach
 - Extract principles from experience
+- Always run a test after editing it
+
+### Test Execution
+- Always run tests in a way that avoids a blocking process afterwards. This is important so that you (Claude) can return a result quickly rather than waiting indefinitely.
 
 ### Spikes
 - When facing significant implementation uncertainty, create a **spike**
