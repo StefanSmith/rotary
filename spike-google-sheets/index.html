@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sheets Export Spike</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+</head>
+<body>
+    <h1>Google Sheets Export Spike</h1>
+    <p>Research: How to export data to Google Sheets from a webpage</p>
+    <p><strong>Permission Scope:</strong> drive.file (only files created by this app)</p>
+    
+    <button id="authorize">Authorize Google</button>
+    <button id="create-sheet" disabled>Create Test Sheet</button>
+    <button id="export-data" disabled>Export Rota Data</button>
+    
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        // Wait for both gapi and google to be available
+        function waitForGoogleAPIs() {
+            if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+                initializeGapi();
+            } else {
+                setTimeout(waitForGoogleAPIs, 100);
+            }
+        }
+        
+        // Start checking once DOM is loaded
+        document.addEventListener('DOMContentLoaded', waitForGoogleAPIs);
+        // Google API configuration from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const CLIENT_ID = urlParams.get('clientId');
+        const API_KEY = urlParams.get('apiKey');
+        const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+        
+        // Check required parameters
+        if (!CLIENT_ID || !API_KEY) {
+            document.getElementById('status').innerHTML = 'Missing required parameters. Add ?clientId=YOUR_CLIENT_ID&apiKey=YOUR_API_KEY to URL';
+        }
+        
+        // Authorization scopes - most restrictive (only files created by app)
+        const SCOPES = [
+            'https://www.googleapis.com/auth/drive.file'        // Only files created by app
+        ];
+
+        let tokenClient;
+
+        document.getElementById('authorize').addEventListener('click', authorize);
+        document.getElementById('create-sheet').addEventListener('click', createSheet);
+        document.getElementById('export-data').addEventListener('click', exportRotaData);
+
+        async function initializeGapi() {
+            try {
+                await new Promise((resolve) => {
+                    gapi.load('client', resolve);
+                });
+                
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: [DISCOVERY_DOC],
+                });
+                
+                // Check if sheets API loaded
+                if (gapi.client.sheets) {
+                    document.getElementById('status').innerHTML = 'Google Sheets API loaded successfully!';
+                } else {
+                    document.getElementById('status').innerHTML = 'Warning: Sheets API not available. Check API key configuration.';
+                }
+                
+                console.log('Available APIs:', Object.keys(gapi.client));
+                
+            } catch (error) {
+                document.getElementById('status').innerHTML = 'Failed to initialize: ' + error.message;
+                console.error('Init error:', error);
+            }
+        }
+
+        function authorize() {
+            // Using Google Identity Services for OAuth2
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES.join(' '),
+                callback: (tokenResponse) => {
+                    if (tokenResponse.error !== undefined) {
+                        throw (tokenResponse);
+                    }
+                    document.getElementById('status').innerHTML = 'Authorized!';
+                    document.getElementById('create-sheet').disabled = false;
+                    document.getElementById('export-data').disabled = false;
+                },
+            });
+            tokenClient.requestAccessToken();
+        }
+
+        async function createSheet() {
+            try {
+                // Debug: Check what's available
+                console.log('gapi.client:', gapi.client);
+                console.log('gapi.client.sheets:', gapi.client.sheets);
+                
+                if (!gapi.client.sheets) {
+                    throw new Error('Sheets API not loaded. Check API key and discovery document.');
+                }
+                
+                const response = await gapi.client.sheets.spreadsheets.create({
+                    properties: {
+                        title: 'Rotary Test Sheet - ' + new Date().toISOString()
+                    }
+                });
+                
+                const spreadsheetId = response.result.spreadsheetId;
+                const spreadsheetUrl = response.result.spreadsheetUrl;
+                
+                document.getElementById('results').innerHTML = 
+                    `<p>Sheet created!</p>
+                     <p>ID: ${spreadsheetId}</p>
+                     <p><a href="${spreadsheetUrl}" target="_blank">Open Sheet</a></p>`;
+                
+                // Test: Can we open the sheet in a new tab?
+                window.open(spreadsheetUrl, '_blank');
+                
+            } catch (error) {
+                console.error('Create sheet error:', error);
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function exportRotaData() {
+            try {
+                // Create new spreadsheet with rota data
+                const rotaData = generateTestRotaData();
+                
+                const response = await gapi.client.sheets.spreadsheets.create({
+                    properties: {
+                        title: 'CMU A Rota - ' + new Date().toISOString().split('T')[0]
+                    },
+                    sheets: [{
+                        properties: {
+                            title: 'CMU A'
+                        },
+                        data: [{
+                            rowData: rotaData.map(row => ({
+                                values: row.map(cell => ({ userEnteredValue: { stringValue: cell } }))
+                            }))
+                        }]
+                    }]
+                });
+                
+                const spreadsheetUrl = response.result.spreadsheetUrl;
+                
+                document.getElementById('results').innerHTML = 
+                    `<p>Rota exported!</p>
+                     <p><a href="${spreadsheetUrl}" target="_blank">Open Rota</a></p>`;
+                
+                // Open the sheet
+                window.open(spreadsheetUrl, '_blank');
+                
+            } catch (error) {
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        function generateTestRotaData() {
+            // Test data based on requirements
+            const doctors = ['AB', 'CD', 'DE'];
+            const weeks = [];
+            
+            // Header row
+            weeks.push(['Week Starting', 'CMU A Front', 'CMU A Back']);
+            
+            // Generate sample weeks (first Monday in April onwards)
+            const startDate = new Date('2024-04-01');
+            // Find first Monday
+            while (startDate.getDay() !== 1) {
+                startDate.setDate(startDate.getDate() + 1);
+            }
+            
+            for (let i = 0; i < 52; i++) {
+                const weekStart = new Date(startDate);
+                weekStart.setDate(startDate.getDate() + (i * 7));
+                
+                weeks.push([
+                    weekStart.toISOString().split('T')[0],
+                    doctors[Math.floor(Math.random() * doctors.length)],
+                    doctors[Math.floor(Math.random() * doctors.length)]
+                ]);
+            }
+            
+            return weeks;
+        }
+
+        // Initialize when Google API script loads
+    </script>
+</body>
+</html>

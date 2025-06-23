@@ -46,6 +46,13 @@ The user follows **Extreme Programming (XP)** principles with strong emphasis on
 - Critique changes to learn and refine approach
 - Extract principles from experience
 
+### Spikes
+- When facing significant implementation uncertainty, create a **spike**
+- Spikes are throwaway experiments to answer specific technical questions
+- Time-boxed research with disposable code to reduce risk
+- Document findings to inform production implementation
+- Example: "How do you export data to Google Sheets from a webpage?"
+
 ## Architecture
 
 **Current stack:**
