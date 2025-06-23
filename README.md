@@ -1,4 +1,4 @@
-# Geris Rota
+# Rotary
 
 A web application for generating annual rotas for doctors in geriatrics wards. Built with React and TypeScript, using test-driven development with Playwright for browser-level acceptance testing.
 
